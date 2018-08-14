@@ -19,6 +19,7 @@ const {
     NetInfo,
     Platform,
     StyleSheet,
+    Image,
 } = ReactNative;
 
 const styles = StyleSheet.create({
@@ -52,8 +53,8 @@ class CachedImage extends React.Component {
     };
 
     static defaultProps = {
-            renderImage: props => (<ImageBackground imageStyle={props.style} ref={CACHED_IMAGE_REF} {...props} />),
-            activityIndicatorProps: {},
+        renderImage: props => (<Image imageStyle={props.style} ref={CACHED_IMAGE_REF} {...props} />),
+        activityIndicatorProps: {},
     };
 
     static contextTypes = {
@@ -157,31 +158,51 @@ class CachedImage extends React.Component {
             });
     }
 
+    checkUrl = function (value) {
+        const regx = /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i
+        return regx.test(value);
+    }
+
     render() {
-        if (this.state.isCacheable && !this.state.cachedImagePath) {
-            return this.renderLoader();
-        }
+        // if (this.state.isCacheable && !this.state.cachedImagePath) {
+        //     return this.renderLoader();
+        // }
         const props = getImageProps(this.props);
         const style = this.props.style || styles.image;
         const source = (this.state.isCacheable && this.state.cachedImagePath) ? {
             uri: 'file://' + this.state.cachedImagePath
         } : this.props.source;
-        if (this.props.fallbackSource && !this.state.cachedImagePath) {
-            return this.props.renderImage({
-                ...props,
-                key: `${props.key || source.uri}error`,
-                style,
-                source: this.props.fallbackSource
-            });
-        }
-        return this.props.renderImage({
-            ...props,
-            key: props.key || source.uri,
-            style,
-            source
-        });
-    }
+        
+        // if (this.props.fallbackSource && !this.state.cachedImagePath) {
+        //     console.log('if-cache ', source);
+        //     return this.props.renderImage({
+        //         ...props,
+        //         key: `${props.key || source.uri}error`,
+        //         style,
+        //         source: this.props.fallbackSource
+        //     });
+        // }
+        // console.log('else-cache ', source);
+        // return this.props.renderImage({
+        //     ...props,
+        //     key: props.key || source.uri,
+        //     style,
+        //     source
+        // });
 
+        return (<View style={this.props.style}>
+            <Image ref={CACHED_IMAGE_REF} key={props.key || source.uri} fadeDuration={0} source={source} style={this.props.style} />
+            {(this.state.cachedImagePath || !this.props.preview) ? null : (<View style={[this.props.style, { backgroundColor: '#dddddd', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'absolute', zIndex: 1 }]}>
+                {this.props.preview ? (<Image
+                    source={{ uri: this.checkUrl(this.props.preview) ? this.props.preview : `data:image/gif;base64,${this.props.preview}` }}
+                    fadeDuration={0}
+                    style={this.props.style}
+                    blurRadius={Platform.OS === "ios" ? 1 : 0.5}
+                />) : null}
+            </View>)}
+        </View>)
+
+    }
     renderLoader() {
         const imageProps = getImageProps(this.props);
         const imageStyle = [this.props.style, styles.loaderPlaceholder];
@@ -206,7 +227,7 @@ class CachedImage extends React.Component {
             return (
                 <ActivityIndicator
                     {...activityIndicatorProps}
-                    style={[imageStyle, activityIndicatorStyle]}/>
+                    style={[imageStyle, activityIndicatorStyle]} />
             );
         }
         // otherwise render an image with the defaultSource with the ActivityIndicator on top of it
@@ -218,11 +239,11 @@ class CachedImage extends React.Component {
             children: (
                 LoadingIndicator
                     ? <View style={[imageStyle, activityIndicatorStyle]}>
-                    <LoadingIndicator {...activityIndicatorProps} />
-                </View>
+                        <LoadingIndicator {...activityIndicatorProps} />
+                    </View>
                     : <ActivityIndicator
-                    {...activityIndicatorProps}
-                    style={activityIndicatorStyle}/>
+                        {...activityIndicatorProps}
+                        style={activityIndicatorStyle} />
             )
         });
     }
