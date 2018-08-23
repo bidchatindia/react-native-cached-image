@@ -163,6 +163,19 @@ class CachedImage extends React.Component {
         return regx.test(value);
     }
 
+    renderCustomLoader() {
+        const LoadingIndicator = this.props.loadingIndicator;
+
+        return this.props.loadingIndicator ? <LoadingIndicator {...this.props}/> :
+         (<View style={[this.props.style, { backgroundColor: '#dddddd', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'absolute', zIndex: 1 }]}>
+            {this.props.preview ? (<Image
+                source={this.props.preview}
+                fadeDuration={0}
+                style={this.props.style}
+            />) : null}
+        </View>);
+    }
+
     render() {
         // if (this.state.isCacheable && !this.state.cachedImagePath) {
         //     return this.renderLoader();
@@ -172,7 +185,7 @@ class CachedImage extends React.Component {
         const source = (this.state.isCacheable && this.state.cachedImagePath) ? {
             uri: 'file://' + this.state.cachedImagePath
         } : this.props.source;
-        
+
         // if (this.props.fallbackSource && !this.state.cachedImagePath) {
         //     console.log('if-cache ', source);
         //     return this.props.renderImage({
@@ -192,14 +205,7 @@ class CachedImage extends React.Component {
 
         return (<View style={this.props.style}>
             <Image ref={CACHED_IMAGE_REF} key={props.key || source.uri} fadeDuration={0} source={source} style={this.props.style} />
-            {(this.state.cachedImagePath || !this.props.preview) ? null : (<View style={[this.props.style, { backgroundColor: '#dddddd', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'absolute', zIndex: 1 }]}>
-                {this.props.preview ? (<Image
-                    source={{ uri: this.checkUrl(this.props.preview) ? this.props.preview : `data:image/gif;base64,${this.props.preview}` }}
-                    fadeDuration={0}
-                    style={this.props.style}
-                    blurRadius={Platform.OS === "ios" ? 1 : 0.5}
-                />) : null}
-            </View>)}
+            {(!this.state.isCacheable || this.state.cachedImagePath) ? null : this.renderCustomLoader()}
         </View>)
 
     }
