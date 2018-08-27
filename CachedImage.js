@@ -148,6 +148,10 @@ class CachedImage extends React.Component {
                 this.safeSetState({
                     cachedImagePath
                 });
+                // Callback to feedback of loading image success
+                if(this.props.onLoad) {
+                    this.props.onLoad(true);
+                }
             })
             .catch(err => {
                 // console.warn(err);
